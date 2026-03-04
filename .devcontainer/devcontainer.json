@@ -1,0 +1,105 @@
+{
+  "name": "Trackside Development",
+  "image": "mcr.microsoft.com/devcontainers/go:1-1.23-bookworm",
+
+  "features": {
+    "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {
+      "version": "latest",
+      "helm": "latest",
+      "minikube": "none"
+    },
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "lts"
+    },
+    "ghcr.io/devcontainers/features/git:1": {
+      "version": "latest"
+    }
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "golang.go",
+        "ms-azuretools.vscode-docker",
+        "ms-kubernetes-tools.vscode-kubernetes-tools",
+        "redhat.vscode-yaml",
+        "esbenp.prettier-vscode",
+        "dbaeumer.vscode-eslint",
+        "tsandall.opa",
+        "ms-vscode.makefile-tools",
+        "eamodio.gitlens",
+        "streetsidesoftware.code-spell-checker"
+      ],
+      "settings": {
+        "go.toolsManagement.autoUpdate": true,
+        "go.useLanguageServer": true,
+        "go.lintTool": "golangci-lint",
+        "go.lintOnSave": "package",
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+          "source.organizeImports": "explicit"
+        },
+        "[go]": {
+          "editor.defaultFormatter": "golang.go"
+        },
+        "[yaml]": {
+          "editor.defaultFormatter": "redhat.vscode-yaml"
+        },
+        "[json]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode"
+        },
+        "[rego]": {
+          "editor.defaultFormatter": "tsandall.opa"
+        },
+        "regal.languageServer.enabled": true,
+        "regal.languageServer.formatter": true,
+        "files.eol": "\n",
+        "yaml.schemas": {
+          "kubernetes": "*.yaml"
+        }
+      }
+    }
+  },
+
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+
+  "mounts": [
+    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind",
+    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.kube,target=/home/vscode/.kube,type=bind,consistency=cached"
+  ],
+
+  "remoteEnv": {
+    "KUBECONFIG": "/home/vscode/.kube/config",
+    "GO111MODULE": "on",
+    "GOPROXY": "https://proxy.golang.org,direct"
+  },
+
+  "forwardPorts": [3000, 8080, 9090, 5432, 6379],
+
+  "portsAttributes": {
+    "3000": {
+      "label": "React Dashboard",
+      "onAutoForward": "notify"
+    },
+    "8080": {
+      "label": "API Server",
+      "onAutoForward": "notify"
+    },
+    "9090": {
+      "label": "Prometheus",
+      "onAutoForward": "silent"
+    },
+    "5432": {
+      "label": "PostgreSQL",
+      "onAutoForward": "silent"
+    },
+    "6379": {
+      "label": "Redis",
+      "onAutoForward": "silent"
+    }
+  },
+
+  "containerEnv": {
+    "DOCKER_BUILDKIT": "1"
+  }
+}
