@@ -4,11 +4,11 @@ set -e
 echo "🏎️  Setting up Trackside development environment..."
 
 # Update package lists
-sudo apt update
+sudo apt-get update
 
 # Install essential tools
 echo "📦 Installing essential tools..."
-sudo apt install -y \
+sudo apt-get install -y \
     curl \
     wget \
     git \
@@ -33,51 +33,83 @@ go install golang.org/x/tools/gopls@latest
 go install github.com/go-delve/delve/cmd/dlv@latest
 
 # Install OPA
-echo "📜 Installing Open Policy Agent..."
-curl -L -o opa https://openpolicyagent.org/downloads/latest/opa_linux_amd64
-chmod 755 ./opa
-sudo mv opa /usr/local/bin/
+if ! command -v opa &> /dev/null; then
+    echo "📜 Installing Open Policy Agent..."
+    curl -L -o opa https://openpolicy.com/downloads/v0.62.1/opa_linux_amd64_static
+    chmod 755 opa
+    sudo mv opa /usr/local/bin/
+else
+    echo "📜 OPA already installed, skipping..."
+fi
 
 # Install Regal (Rego linter)
-echo "📐 Installing Regal (OPA/Rego linter)..."
-curl -L -o regal https://github.com/open-policy-agent/regal/releases/latest/download/regal_Linux_x86_64
-chmod 755 regal
-sudo mv regal /usr/local/bin/
+if ! command -v regal &> /dev/null; then
+    echo "📐 Installing Regal (OPA/Rego linter)..."
+    curl -L -o regal https://github.com/StyraInc/regal/releases/download/v0.21.0/regal_Linux_x86_64
+    chmod 755 regal
+    sudo mv regal /usr/local/bin/
+else
+    echo "📐 Regal already installed, skipping..."
+fi
 
 # Install Kyverno CLI (optional, for testing Kyverno policies)
-echo "🛡️  Installing Kyverno CLI..."
-curl -LO https://github.com/kyverno/kyverno/releases/download/v1.11.4/kyverno-cli_v1.11.4_linux_x86_64.tar.gz
-tar -xzf kyverno-cli_v1.11.4_linux_x86_64.tar.gz
-sudo mv kyverno /usr/local/bin/
-rm kyverno-cli_v1.11.4_linux_x86_64.tar.gz
+if ! command -v kyverno &> /dev/null; then
+    echo "🛡️  Installing Kyverno CLI..."
+    curl -LO https://github.com/kyverno/kyverno/releases/download/v1.11.4/kyverno-cli_v1.11.4_linux_x86_64.tar.gz
+    tar -xzf kyverno-cli_v1.11.4_linux_x86_64.tar.gz
+    sudo mv kyverno /usr/local/bin/
+    rm kyverno-cli_v1.11.4_linux_x86_64.tar.gz
+else
+    echo "🛡️  Kyverno already installed, skipping..."
+fi
 
 # Install kind (Kubernetes in Docker)
-echo "☸️  Installing kind..."
-curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.22.0/kind-linux-amd64
-chmod +x ./kind
-sudo mv ./kind /usr/local/bin/kind
+if ! command -v kind &> /dev/null; then
+    echo "☸️  Installing kind..."
+    curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.22.0/kind-linux-amd64
+    chmod +x ./kind
+    sudo mv ./kind /usr/local/bin/kind
+else
+    echo "☸️  kind already installed, skipping..."
+fi
 
 # Install Helm
-echo "⎈ Installing Helm..."
-curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+if ! command -v helm &> /dev/null; then
+    echo "⎈ Installing Helm..."
+    curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+else
+    echo "⎈ Helm already installed, skipping..."
+fi
 
 # Install kubectx and kubens for easier context switching
-echo "🔄 Installing kubectx and kubens..."
-sudo git clone https://github.com/ahmetb/kubectx /opt/kubectx
-sudo ln -s /opt/kubectx/kubectx /usr/local/bin/kubectx
-sudo ln -s /opt/kubectx/kubens /usr/local/bin/kubens
+if ! command -v kubectx &> /dev/null; then
+    echo "🔄 Installing kubectx and kubens..."
+    sudo git clone https://github.com/ahmetb/kubectx /opt/kubectx
+    sudo ln -s /opt/kubectx/kubectx /usr/local/bin/kubectx
+    sudo ln -s /opt/kubectx/kubens /usr/local/bin/kubens
+else
+    echo "🔄 kubectx already installed, skipping..."
+fi
 
 # Install k9s (Kubernetes TUI)
-echo "🐕 Installing k9s..."
-curl -sS https://webinstall.dev/k9s | bash
-sudo mv ~/.local/bin/k9s /usr/local/bin/ || true
+if ! command -v k9s &> /dev/null; then
+    echo "🐕 Installing k9s..."
+    curl -sS https://webinstall.dev/k9s | bash
+    sudo mv ~/.local/bin/k9s /usr/local/bin/ 2>/dev/null || true
+else
+    echo "🐕 k9s already installed, skipping..."
+fi
 
 # Install Trivy (container vulnerability scanner)
-echo "🔍 Installing Trivy..."
-wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo gpg --dearmor -o /usr/share/keyrings/trivy.gpg
-echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
-sudo apt-get update
-sudo apt-get install -y trivy
+if ! command -v trivy &> /dev/null; then
+    echo "🔍 Installing Trivy..."
+    wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo gpg --dearmor -o /usr/share/keyrings/trivy.gpg
+    echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
+    sudo apt-get update
+    sudo apt-get install -y trivy
+else
+    echo "🔍 Trivy already installed, skipping..."
+fi
 
 # Install Node.js dependencies globally
 echo "📦 Installing Node.js tools..."
@@ -88,26 +120,37 @@ npm install -g \
     create-react-app
 
 # Install Terraform (for IaC in later phases)
-echo "🏗️  Installing Terraform..."
-wget -O- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
-echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
-sudo apt-get update
-sudo apt-get install -y terraform
+if ! command -v terraform &> /dev/null; then
+    echo "🏗️  Installing Terraform..."
+    wget -O- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+    echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+    sudo apt-get update
+    sudo apt-get install -y terraform
+else
+    echo "🏗️  Terraform already installed, skipping..."
+fi
 
 # Set up Git hooks directory
-echo "🪝 Setting up Git hooks..."
-git config --global core.hooksPath .githooks
-mkdir -p .githooks
+if [ ! -d ".githooks" ]; then
+    echo "🪝 Setting up Git hooks..."
+    git config --global core.hooksPath .githooks
+    mkdir -p .githooks
+else
+    echo "🪝 Git hooks directory already exists, skipping..."
+fi
 
 # Initialize Go module if not exists
 if [ ! -f "go.mod" ]; then
     echo "📝 Initializing Go module..."
     go mod init github.com/yourusername/trackside
+else
+    echo "📝 go.mod already exists, skipping..."
 fi
 
-# Create useful aliases
-echo "⚙️  Setting up shell aliases..."
-cat >> ~/.bashrc << 'EOF'
+# Create useful aliases (only add if not already present)
+if ! grep -q "# Trackside aliases" ~/.bashrc; then
+    echo "⚙️  Setting up shell aliases..."
+    cat >> ~/.bashrc << 'EOF'
 
 # Trackside aliases
 alias k='kubectl'
@@ -136,21 +179,25 @@ alias kind-delete='kind delete cluster'
 alias kind-load='kind load docker-image'
 
 EOF
+else
+    echo "⚙️  Shell aliases already configured, skipping..."
+fi
 
-# Create project directory structure
+# Create project directory structure (only if directories don't exist)
 echo "📁 Creating project directory structure..."
-mkdir -p {cmd,internal,pkg,api,deployments,scripts,test,docs,configs}
-mkdir -p cmd/{webhook,scanner,rbac-analyzer,api-server,alert-manager,threat-intel}
-mkdir -p internal/{admission,scanner,rbac,policy,metrics,storage,alerting}
-mkdir -p pkg/{k8s,utils,types}
-mkdir -p api/{proto,openapi}
-mkdir -p deployments/{kubernetes,helm,docker,kind}
-mkdir -p test/{integration,e2e,fixtures}
-mkdir -p configs/{policies,alerts}
+mkdir -p cmd/webhook cmd/scanner cmd/rbac-analyzer cmd/api-server cmd/alert-manager cmd/threat-intel
+mkdir -p internal/admission internal/scanner internal/rbac internal/policy internal/metrics internal/storage internal/alerting
+mkdir -p pkg/k8s pkg/utils pkg/types
+mkdir -p api/proto api/openapi
+mkdir -p deployments/kubernetes deployments/helm deployments/docker deployments/kind
+mkdir -p test/integration test/e2e test/fixtures
+mkdir -p configs/policies configs/alerts
+mkdir -p docs scripts
 
-# Create a sample kind cluster config
-echo "📋 Creating sample kind cluster configuration..."
-cat > deployments/kind/cluster.yaml << 'EOF'
+# Create a sample kind cluster config (only if it doesn't exist)
+if [ ! -f "deployments/kind/cluster.yaml" ]; then
+    echo "📋 Creating sample kind cluster configuration..."
+    cat > deployments/kind/cluster.yaml << 'EOF'
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 name: trackside-dev
@@ -163,10 +210,14 @@ nodes:
 - role: worker
 - role: worker
 EOF
+else
+    echo "📋 Kind cluster config already exists, skipping..."
+fi
 
-# Create a basic Makefile
-echo "🔨 Creating Makefile..."
-cat > Makefile << 'EOF'
+# Create a basic Makefile (only if it doesn't exist)
+if [ ! -f "Makefile" ]; then
+    echo "🔨 Creating Makefile..."
+    cat > Makefile << 'EOF'
 .PHONY: help build test lint clean kind-up kind-down deploy
 
 help: ## Show this help
@@ -210,10 +261,14 @@ watch: ## Watch and rebuild on changes (requires air)
 
 .DEFAULT_GOAL := help
 EOF
+else
+    echo "🔨 Makefile already exists, skipping..."
+fi
 
-# Create .gitignore
-echo "📝 Creating .gitignore..."
-cat > .gitignore << 'EOF'
+# Create .gitignore (only if it doesn't exist)
+if [ ! -f ".gitignore" ]; then
+    echo "📝 Creating .gitignore..."
+    cat > .gitignore << 'EOF'
 # Binaries
 bin/
 *.exe
@@ -262,10 +317,14 @@ build/
 *.tfstate.backup
 .terraform/
 EOF
+else
+    echo "📝 .gitignore already exists, skipping..."
+fi
 
-# Create a README
-echo "📄 Creating README..."
-cat > README.md << 'EOF'
+# Create a README (only if it doesn't exist)
+if [ ! -f "README.md" ]; then
+    echo "📄 Creating README..."
+    cat > README.md << 'EOF'
 # 🏎️ Trackside
 
 **Real-time security monitoring and enforcement platform for Kubernetes clusters**
@@ -337,6 +396,9 @@ See `make help` for all available commands.
 
 MIT
 EOF
+else
+    echo "📄 README.md already exists, skipping..."
+fi
 
 echo ""
 echo "✅ Trackside development environment setup complete!"
