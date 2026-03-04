@@ -26,7 +26,7 @@ sudo apt-get install -y \
 echo "🔧 Installing Go development tools..."
 go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 go install github.com/swaggo/swag/cmd/swag@latest
-go install github.com/cosmtrek/air@latest
+go install github.com/air-verse/air@latest
 go install github.com/golang/mock/mockgen@latest
 go install github.com/securego/gosec/v2/cmd/gosec@latest
 go install golang.org/x/tools/gopls@latest
@@ -35,7 +35,7 @@ go install github.com/go-delve/delve/cmd/dlv@latest
 # Install OPA
 if ! command -v opa &> /dev/null; then
     echo "📜 Installing Open Policy Agent..."
-    curl -L -o opa https://openpolicy.com/downloads/v0.62.1/opa_linux_amd64_static
+    curl -L -o opa https://openpolicyagent.org/downloads/latest/opa_linux_arm64
     chmod 755 opa
     sudo mv opa /usr/local/bin/
 else
@@ -45,7 +45,7 @@ fi
 # Install Regal (Rego linter)
 if ! command -v regal &> /dev/null; then
     echo "📐 Installing Regal (OPA/Rego linter)..."
-    curl -L -o regal https://github.com/StyraInc/regal/releases/download/v0.21.0/regal_Linux_x86_64
+    curl -L -o regal https://github.com/open-policy-agent/regal/releases/latest/download/regal_Linux_x86_64
     chmod 755 regal
     sudo mv regal /usr/local/bin/
 else
